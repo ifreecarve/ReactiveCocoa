@@ -31,21 +31,21 @@ public final class Action<Input, Output, Error: ErrorType> {
 	public let errors: Signal<Error, NoError>
 
 	/// Whether the action is currently executing.
-	public var executing: AnyProperty<Bool> {
-		return AnyProperty(_executing)
+	public var executing: Property<Bool> {
+		return Property(_executing)
 	}
 
 	private let _executing: MutableProperty<Bool> = MutableProperty(false)
 
 	/// Whether the action is currently enabled.
-	public var enabled: AnyProperty<Bool> {
-		return AnyProperty(_enabled)
+	public var enabled: Property<Bool> {
+		return Property(_enabled)
 	}
 
 	private let _enabled: MutableProperty<Bool> = MutableProperty(false)
 
 	/// Whether the instantiator of this action wants it to be enabled.
-	private let userEnabled: AnyProperty<Bool>
+	private let userEnabled: Property<Bool>
 
 	/// This queue is used for read-modify-write operations on the `_executing`
 	/// property.
@@ -61,7 +61,7 @@ public final class Action<Input, Output, Error: ErrorType> {
 	/// SignalProducer for each input.
 	public init<P: PropertyType where P.Value == Bool>(enabledIf: P, _ execute: Input -> SignalProducer<Output, Error>) {
 		executeClosure = execute
-		userEnabled = AnyProperty(enabledIf)
+		userEnabled = Property(enabledIf)
 
 		(events, eventsObserver) = Signal<Event<Output, Error>, NoError>.pipe()
 
@@ -76,7 +76,7 @@ public final class Action<Input, Output, Error: ErrorType> {
 	/// Initializes an action that will be enabled by default, and create a
 	/// SignalProducer for each input.
 	public convenience init(_ execute: Input -> SignalProducer<Output, Error>) {
-		self.init(enabledIf: ConstantProperty(true), execute)
+		self.init(enabledIf: Property(value: true), execute)
 	}
 
 	deinit {
@@ -131,7 +131,7 @@ public protocol ActionType {
 	associatedtype Error: ErrorType
 
 	/// Whether the action is currently enabled.
-	var enabled: AnyProperty<Bool> { get }
+	var enabled: Property<Bool> { get }
 
 	/// Extracts an action from the receiver.
 	var action: Action<Input, Output, Error> { get }
