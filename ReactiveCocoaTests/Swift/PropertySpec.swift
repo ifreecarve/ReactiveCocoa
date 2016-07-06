@@ -413,6 +413,45 @@ class PropertySpec: QuickSpec {
 						}
 					}
 				}
+
+				describe("Property.capture") {
+					it("should not capture intermediate properties but only the ultimate sources") {
+						func increment(input: Int) -> Int {
+							return input + 1
+						}
+
+						weak var weakSourceProperty: MutableProperty<Int>?
+						weak var weakPropertyA: Property<Int>?
+						weak var weakPropertyB: Property<Int>?
+						weak var weakPropertyC: Property<Int>?
+
+						var finalProperty: Property<Int>!
+
+						func scope() {
+							let property = MutableProperty(1)
+							weakSourceProperty = property
+
+							let propertyA = property.map(increment)
+							weakPropertyA = propertyA
+
+							let propertyB = propertyA.map(increment)
+							weakPropertyB = propertyB
+
+							let propertyC = propertyB.map(increment)
+							weakPropertyC = propertyC
+
+							finalProperty = propertyC.map(increment)
+						}
+
+						scope()
+
+						expect(finalProperty.value) == 5
+						expect(weakSourceProperty).toNot(beNil())
+						expect(weakPropertyA).to(beNil())
+						expect(weakPropertyB).to(beNil())
+						expect(weakPropertyC).to(beNil())
+					}
+				}
 			}
 
 			describe("from a value and SignalProducer") {
