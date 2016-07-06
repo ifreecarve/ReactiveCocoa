@@ -21,54 +21,6 @@ private let finalOtherPropertyValue = "FinalOtherValue"
 
 class PropertySpec: QuickSpec {
 	override func spec() {
-		describe("ConstantProperty") {
-			it("should have the value given at initialization") {
-				let constantProperty = Property(value: initialPropertyValue)
-
-				expect(constantProperty.value) == initialPropertyValue
-			}
-
-			it("should yield a signal that interrupts observers without emitting any value.") {
-				let constantProperty = Property(value: initialPropertyValue)
-
-				var signalInterrupted = false
-				var hasUnexpectedEventsEmitted = false
-
-				constantProperty.signal.observe { event in
-					switch event {
-					case .Interrupted:
-						signalInterrupted = true
-					case .Next, .Failed, .Completed:
-						hasUnexpectedEventsEmitted = true
-					}
-				}
-
-				expect(signalInterrupted) == true
-				expect(hasUnexpectedEventsEmitted) == false
-			}
-
-			it("should yield a producer that sends the current value then completes") {
-				let constantProperty = Property(value: initialPropertyValue)
-
-				var sentValue: String?
-				var signalCompleted = false
-
-				constantProperty.producer.start { event in
-					switch event {
-					case let .Next(value):
-						sentValue = value
-					case .Completed:
-						signalCompleted = true
-					case .Failed, .Interrupted:
-						break
-					}
-				}
-
-				expect(sentValue) == initialPropertyValue
-				expect(signalCompleted) == true
-			}
-		}
-
 		describe("MutableProperty") {
 			it("should have the value given at initialization") {
 				let mutableProperty = MutableProperty(initialPropertyValue)
@@ -297,6 +249,54 @@ class PropertySpec: QuickSpec {
 		}
 
 		describe("Property") {
+			describe("from a value") {
+				it("should have the value given at initialization") {
+					let constantProperty = Property(value: initialPropertyValue)
+
+					expect(constantProperty.value) == initialPropertyValue
+				}
+
+				it("should yield a signal that interrupts observers without emitting any value.") {
+					let constantProperty = Property(value: initialPropertyValue)
+
+					var signalInterrupted = false
+					var hasUnexpectedEventsEmitted = false
+
+					constantProperty.signal.observe { event in
+						switch event {
+						case .Interrupted:
+							signalInterrupted = true
+						case .Next, .Failed, .Completed:
+							hasUnexpectedEventsEmitted = true
+						}
+					}
+
+					expect(signalInterrupted) == true
+					expect(hasUnexpectedEventsEmitted) == false
+				}
+
+				it("should yield a producer that sends the current value then completes") {
+					let constantProperty = Property(value: initialPropertyValue)
+
+					var sentValue: String?
+					var signalCompleted = false
+
+					constantProperty.producer.start { event in
+						switch event {
+						case let .Next(value):
+							sentValue = value
+						case .Completed:
+							signalCompleted = true
+						case .Failed, .Interrupted:
+							break
+						}
+					}
+
+					expect(sentValue) == initialPropertyValue
+					expect(signalCompleted) == true
+				}
+			}
+
 			describe("from a PropertyType") {
 				it("should pass through behaviors of the input property") {
 					let constantProperty = Property(value: initialPropertyValue)
