@@ -26,7 +26,7 @@ public protocol PropertyType: class {
 	/// By default, it returns `self` for all implementations except
 	/// `Property`, which would returns its ultimate sources so as to allow
 	/// intermediate properties to deinitialize after a composition.
-	var sources: [Any] { get }
+	var sources: [AnyObject] { get }
 }
 
 /// Represents an observable property that can be mutated directly.
@@ -43,7 +43,7 @@ public protocol MutablePropertyType: PropertyType {
 /// A transformed property would retain its ultimate source, but not
 /// any intermediate property during the composition.
 extension PropertyType {
-	public var sources: [Any] {
+	public var sources: [AnyObject] {
 		/// Generally, only `Property` would have non-`self` sources to be captured.
 		return [self]
 	}
@@ -358,7 +358,7 @@ public func zip<S: SequenceType where S.Generator.Element: PropertyType>(propert
 /// In other words, its producer and signal can outlive the property itself, if
 /// its source outlives it too.
 public final class Property<Value>: PropertyType {
-	public let sources: [Any]
+	public let sources: [AnyObject]
 	private let disposable: Disposable?
 
 	private let _value: () -> Value
@@ -436,7 +436,7 @@ public final class Property<Value>: PropertyType {
 	///
 	/// The producer and the signal of the created property would complete only
 	/// when the `propertyProducer` completes.
-	private init(propertyProducer: SignalProducer<Value, NoError>, capturing propertySources: [Any]) {
+	private init(propertyProducer: SignalProducer<Value, NoError>, capturing propertySources: [AnyObject]) {
 		var value: Value!
 
 		disposable = propertyProducer.start { event in
