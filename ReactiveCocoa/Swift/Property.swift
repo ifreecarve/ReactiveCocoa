@@ -357,7 +357,7 @@ public struct AnyProperty<Value>: PropertyType {
 
 	/// Initializes a property as a read-only view of the given property.
 	public init<P: PropertyType where P.Value == Value>(_ property: P) {
-		sources = AnyProperty.capture(property)
+		sources = [property]
 		_value = { property.value }
 		_producer = { property.producer }
 		_signal = { property.signal }
@@ -381,7 +381,7 @@ public struct AnyProperty<Value>: PropertyType {
 	/// `property`. The resulting property captures `property`.
 	private init<P: PropertyType>(_ property: P, @noescape transform: SignalProducer<P.Value, NoError> -> SignalProducer<Value, NoError>) {
 		self.init(propertyProducer: transform(property.producer),
-		          capturing: AnyProperty.capture(property))
+		          capturing: [property])
 	}
 
 	/// Initializes a property by applying the binary `SignalProducer` transform on
@@ -389,7 +389,7 @@ public struct AnyProperty<Value>: PropertyType {
 	/// and `anotherProperty`.
 	private init<P1: PropertyType, P2: PropertyType>(_ firstProperty: P1, _ secondProperty: P2, @noescape transform: SignalProducer<P1.Value, NoError> -> SignalProducer<P2.Value, NoError> -> SignalProducer<Value, NoError>) {
 		self.init(propertyProducer: transform(firstProperty.producer)(secondProperty.producer),
-		          capturing: AnyProperty.capture(firstProperty) + AnyProperty.capture(secondProperty))
+		          capturing: [firstProperty, secondProperty])
 	}
 
 	/// Initializes a property from a producer that promises to send at least one
@@ -455,17 +455,6 @@ public struct AnyProperty<Value>: PropertyType {
 		_value = { relay.value! }
 		_producer = { prepareRelayProducer(relay.producer) }
 		_signal = { prepareRelaySignal(relay.signal) }
-	}
-
-	/// Check if `property` is an `AnyProperty` and has already captured its sources
-	/// using a closure. Returns that closure if it does. Otherwise, returns a closure
-	/// which captures `property`.
-	private static func capture<P: PropertyType>(property: P) -> [Any] {
-		if let property = property as? AnyProperty<P.Value> {
-			return property.sources
-		} else {
-			return [property]
-		}
 	}
 }
 
