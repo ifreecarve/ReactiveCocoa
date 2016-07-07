@@ -618,7 +618,7 @@ class PropertySpec: QuickSpec {
 					var secondResult: String!
 
 					let zippedProperty = property.zipWith(otherProperty)
-					zippedProperty.values.startWithNext { (left, right) in firstResult = left + right }
+					zippedProperty.producer.startWithNext { (left, right) in firstResult = left + right }
 
 					func getValue() -> String {
 						return zippedProperty.value.0 + zippedProperty.value.1
@@ -633,7 +633,7 @@ class PropertySpec: QuickSpec {
 
 					// It should still be the tuple with initial property values,
 					// since `otherProperty` isn't changed yet.
-					zippedProperty.values.startWithNext { (left, right) in secondResult = left + right }
+					zippedProperty.producer.startWithNext { (left, right) in secondResult = left + right }
 					expect(secondResult) == initialPropertyValue + initialOtherPropertyValue
 
 					otherProperty.value = subsequentOtherPropertyValue
