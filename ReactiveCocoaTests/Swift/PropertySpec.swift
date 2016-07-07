@@ -681,6 +681,60 @@ class PropertySpec: QuickSpec {
 					expect(secondResult) == subsequentPropertyValue + subsequentOtherPropertyValue
 				}
 
+				it("should be consistent between nested zipped properties") {
+					let A = MutableProperty(1)
+					let B = MutableProperty(100)
+					let C = MutableProperty(10000)
+
+					var firstResult: Int!
+
+					let zipped = A.zipWith(B)
+					zipped.producer.startWithNext { (left, right) in firstResult = left + right }
+
+					func getValue() -> Int {
+						return zipped.value.0 + zipped.value.1
+					}
+
+					/// Initial states
+					expect(getValue()) == 101
+					expect(firstResult) == 101
+
+					A.value = 2
+					expect(getValue()) == 101
+					expect(firstResult) == 101
+
+					B.value = 200
+					expect(getValue()) == 202
+					expect(firstResult) == 202
+
+					/// Setup
+					A.value = 3
+					expect(getValue()) == 202
+					expect(firstResult) == 202
+
+					/// Zip another property now.
+					var secondResult: Int!
+					let anotherZipped = zipped.zipWith(C)
+					anotherZipped.producer.startWithNext { (left, right) in secondResult = (left.0 + left.1) + right }
+
+					func getAnotherValue() -> Int {
+						return (anotherZipped.value.0.0 + anotherZipped.value.0.1) + anotherZipped.value.1
+					}
+
+					/// Since `zipped` is 202 now, and `C` is 10000,
+					/// shouldn't this be 10202?
+
+					/// Verify `zipped` again.
+					expect(getValue()) == 202
+					expect(firstResult) == 202
+
+					/// Then... well, no. Surprise! (Only before #3042)
+					/// We get 10203 here.
+					///
+					/// https://github.com/ReactiveCocoa/ReactiveCocoa/pull/3042
+					expect(getAnotherValue()) == 10202
+				}
+
 				it("should complete its producer only when the source properties are deinitialized") {
 					var result: [String] = []
 					var completed = false
